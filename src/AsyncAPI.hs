@@ -80,4 +80,4 @@ timeout n ioa
         Right a -> return (Just a)
 
 waitAny :: [Async a] -> IO a
-waitAny asyncs = atomically $ foldr orElse retry $ fmap waitSTM asyncs
+waitAny asyncs = atomically $ foldr orElse retry $ asyncs <&> waitSTM
