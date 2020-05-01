@@ -36,3 +36,22 @@ cancel (Async t _) = throwTo t ThreadKilled
 
 withAsync :: IO a -> (Async a -> IO b) -> IO b
 withAsync io = bracket (async io) cancel
+
+waitEither :: Async a -> Async b -> IO (Either a b)
+waitEither a b = atomically $
+  fmap Left (waitSTM a)
+  `orElse`
+  fmap Right (waitSTM b)
+
+waitBoth :: Async a -> Async b -> IO (a, b)
+waitBoth a b = atomically $ do
+  ra <- waitSTM a `orElse` (do waitSTM b; retry)
+  rb <- waitSTM b
+  return (ra, rb)
+
+concurrently :: IO a -> IO b -> IO (a, b)
+concurrently ioa iob =
+  withAsync ioa $ \a ->
+  withAsync iob $ \b ->
+    waitBoth a b
+
