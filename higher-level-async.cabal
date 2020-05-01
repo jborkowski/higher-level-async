@@ -1,0 +1,75 @@
+cabal-version: 1.12
+
+-- This file has been generated from package.yaml by hpack version 0.31.2.
+--
+-- see: https://github.com/sol/hpack
+--
+-- hash: b10933d8ffc3d35374248ed1ce9750924b46b1f14a8c406ab6b00fa7be1fb072
+
+name:           higher-level-async
+version:        0.1.0.0
+description:    Please see the README on GitHub at <https://github.com/jborkowski/higher-level-async#readme>
+homepage:       https://github.com/jborkowski/higher-level-async#readme
+bug-reports:    https://github.com/jborkowski/higher-level-async/issues
+author:         Jonatan Borkowski
+maintainer:     jonatanborkowski@wp.pl
+copyright:      2019 Jonatan Borkowski
+license:        BSD3
+license-file:   LICENSE
+build-type:     Simple
+extra-source-files:
+    README.md
+    ChangeLog.md
+
+source-repository head
+  type: git
+  location: https://github.com/jborkowski/higher-level-async
+
+library
+  exposed-modules:
+      AsyncAPI
+      Lib
+  other-modules:
+      Paths_higher_level_async
+  hs-source-dirs:
+      src
+  build-depends:
+      async
+    , base >=4.7 && <5
+    , bytestring
+    , http-conduit
+    , stm
+  default-language: Haskell2010
+
+executable higher-level-async-exe
+  main-is: Main.hs
+  other-modules:
+      Paths_higher_level_async
+  hs-source-dirs:
+      app
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      async
+    , base >=4.7 && <5
+    , bytestring
+    , higher-level-async
+    , http-conduit
+    , stm
+  default-language: Haskell2010
+
+test-suite higher-level-async-test
+  type: exitcode-stdio-1.0
+  main-is: Spec.hs
+  other-modules:
+      Paths_higher_level_async
+  hs-source-dirs:
+      test
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N
+  build-depends:
+      async
+    , base >=4.7 && <5
+    , bytestring
+    , higher-level-async
+    , http-conduit
+    , stm
+  default-language: Haskell2010
