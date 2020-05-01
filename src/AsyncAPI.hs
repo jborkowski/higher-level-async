@@ -1,25 +1,34 @@
+{-# LANGUAGE LambdaCase #-}
 module AsyncAPI where
 
 import Control.Concurrent
 import Control.Concurrent.STM
 import Control.Exception
 import Control.Monad
+import Data.Functor
 
 forkFinally' :: IO a -> (Either SomeException a -> IO ()) -> IO ThreadId
 forkFinally' action andThen =
   mask $ \restore ->
     forkIO $ try (restore action) >>= andThen
 
-data Async a = Async ThreadId (TMVar (Either SomeException a))
+data Async a = Async ThreadId (STM (Either SomeException a))
+
+instance Functor Async where
+  fmap f (Async t stm) = Async t stm'
+    where
+      stm' = stm >>= \case
+        Left e  -> return (Left e)
+        Right a -> return (Right (f a))
 
 async :: IO a -> IO (Async a)
 async action = do
   var <- newEmptyTMVarIO
   t <- forkFinally action (atomically . putTMVar var)
-  return (Async t var)
+  return (Async t (readTMVar var))
 
 waitCatchSTM :: Async a -> STM (Either SomeException a)
-waitCatchSTM (Async _ var) = readTMVar var
+waitCatchSTM (Async _ stm) = stm
 
 waitSTM :: Async a -> STM a
 waitSTM a = do
@@ -55,3 +64,20 @@ concurrently ioa iob =
   withAsync iob $ \b ->
     waitBoth a b
 
+race :: IO a -> IO b -> IO (Either a b)
+race ioa iob =
+  withAsync ioa $ \a ->
+  withAsync iob $ \b ->
+    waitEither a b
+
+timeout :: Int -> IO a -> IO (Maybe a)
+timeout n ioa
+  | n < 0     = fmap Just ioa
+  | n == 0    = return Nothing
+  | otherwise =
+     race (threadDelay n) ioa >>= \case
+        Left _ -> return Nothing
+        Right a -> return (Just a)
+
+waitAny :: [Async a] -> IO a
+waitAny asyncs = atomically $ foldr orElse retry $ fmap waitSTM asyncs
