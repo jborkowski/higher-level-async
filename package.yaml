@@ -25,6 +25,7 @@ dependencies:
 - bytestring
 - stm
 - http-conduit
+- network
 
 library:
   source-dirs: src

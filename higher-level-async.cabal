@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: b10933d8ffc3d35374248ed1ce9750924b46b1f14a8c406ab6b00fa7be1fb072
+-- hash: c54b89e29d32c7f0955181f9b45434dc7a26c7f69afcd1d18571327e6f2a863a
 
 name:           higher-level-async
 version:        0.1.0.0
@@ -29,6 +29,7 @@ library
   exposed-modules:
       AsyncAPI
       Lib
+      Server
   other-modules:
       Paths_higher_level_async
   hs-source-dirs:
@@ -38,6 +39,7 @@ library
     , base >=4.7 && <5
     , bytestring
     , http-conduit
+    , network
     , stm
   default-language: Haskell2010
 
@@ -54,6 +56,7 @@ executable higher-level-async-exe
     , bytestring
     , higher-level-async
     , http-conduit
+    , network
     , stm
   default-language: Haskell2010
 
@@ -71,5 +74,6 @@ test-suite higher-level-async-test
     , bytestring
     , higher-level-async
     , http-conduit
+    , network
     , stm
   default-language: Haskell2010
