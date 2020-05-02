@@ -15,8 +15,7 @@ type Port = Int
 newtype State = State { currentFactor :: TVar Int }
 
 withServer :: IO ()
-withServer = do
-  factor <- atomically $ newTVar 2
+withServer =
   runTCPServer Nothing 44444 consume
     where
       consume sock = do

@@ -2,7 +2,8 @@ module Main where
 
 import qualified Data.ByteString as BS
 import           Lib
-import           Server
+--import           Server
+import           Chat
 
 main :: IO ()
 main = do

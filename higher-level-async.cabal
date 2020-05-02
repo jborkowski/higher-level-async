@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: c54b89e29d32c7f0955181f9b45434dc7a26c7f69afcd1d18571327e6f2a863a
+-- hash: e3d7e73519f862016bedc991f984a7f6ff2e5ab2e656f57ded4a34ded0f350b1
 
 name:           higher-level-async
 version:        0.1.0.0
@@ -28,6 +28,7 @@ source-repository head
 library
   exposed-modules:
       AsyncAPI
+      Chat
       Lib
       Server
   other-modules:
@@ -38,6 +39,7 @@ library
       async
     , base >=4.7 && <5
     , bytestring
+    , containers
     , http-conduit
     , network
     , stm
@@ -54,6 +56,7 @@ executable higher-level-async-exe
       async
     , base >=4.7 && <5
     , bytestring
+    , containers
     , higher-level-async
     , http-conduit
     , network
@@ -72,6 +75,7 @@ test-suite higher-level-async-test
       async
     , base >=4.7 && <5
     , bytestring
+    , containers
     , higher-level-async
     , http-conduit
     , network
