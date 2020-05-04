@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: cdff5e126c7ce3da9dc3269a188a95c44c23385e1744295700515ce49e4b7138
+-- hash: e32f550ba1caa48c0362aaf10c9fa4062147710179a1ff56ee4a8febe8d7f788
 
 name:           higher-level-async
 version:        0.1.0.0
@@ -29,6 +29,7 @@ library
   exposed-modules:
       AsyncAPI
       Chat
+      FindPar
       FindSeq
       Lib
       Server

@@ -1,12 +1,12 @@
 module Main where
 
-import qualified Data.ByteString as BS
+import qualified Data.ByteString    as BS
+import           FindSeq
 import           Lib
---import           Server
-import           Chat
+import           System.Environment
 
 main :: IO ()
 main = do
-  withServer
-  xs <- fetchList sites
-  print (map BS.length xs)
+  [s, d] <- getArgs
+  result <- find s d
+  print result
