@@ -27,6 +27,8 @@ dependencies:
 - stm
 - http-conduit
 - network
+- directory
+- filepath
 
 library:
   source-dirs: src
