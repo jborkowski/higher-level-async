@@ -1,9 +1,16 @@
 {-# LANGUAGE LambdaCase #-}
 module FindSeq where
 
-import Data.List        (sort)
+import Data.List          (sort)
 import System.Directory
+import System.Environment
 import System.FilePath
+
+main :: IO ()
+main = do
+  [s, d] <- getArgs
+  result <- find s d
+  print result
 
 find :: String -> FilePath -> IO (Maybe FilePath)
 find s d = do
