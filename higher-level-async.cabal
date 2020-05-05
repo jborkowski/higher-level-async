@@ -4,7 +4,7 @@ cabal-version: 1.12
 --
 -- see: https://github.com/sol/hpack
 --
--- hash: e32f550ba1caa48c0362aaf10c9fa4062147710179a1ff56ee4a8febe8d7f788
+-- hash: a1cc226581d2fc44474277a92e16b7c1caa7a8646d09c3b66d7094eaf9ccb643
 
 name:           higher-level-async
 version:        0.1.0.0
@@ -44,6 +44,56 @@ library
     , containers
     , directory
     , filepath
+    , http-conduit
+    , network
+    , stm
+  default-language: Haskell2010
+
+executable findpar-exe
+  main-is: FindPar.hs
+  other-modules:
+      AsyncAPI
+      Chat
+      FindSeq
+      Lib
+      Server
+      Paths_higher_level_async
+  hs-source-dirs:
+      src
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N -main-is FindPar -eventlog
+  build-depends:
+      async
+    , base >=4.7 && <5
+    , bytestring
+    , containers
+    , directory
+    , filepath
+    , higher-level-async
+    , http-conduit
+    , network
+    , stm
+  default-language: Haskell2010
+
+executable findseq-exe
+  main-is: FindSeq.hs
+  other-modules:
+      AsyncAPI
+      Chat
+      FindPar
+      Lib
+      Server
+      Paths_higher_level_async
+  hs-source-dirs:
+      src
+  ghc-options: -threaded -rtsopts -with-rtsopts=-N -main-is FindSeq
+  build-depends:
+      async
+    , base >=4.7 && <5
+    , bytestring
+    , containers
+    , directory
+    , filepath
+    , higher-level-async
     , http-conduit
     , network
     , stm

@@ -1,3 +1,4 @@
+{-# LANGUAGE BangPatterns #-}
 {-# LANGUAGE LambdaCase #-}
 module FindPar where
 
@@ -6,14 +7,13 @@ import Data.List          (sort)
 import System.Directory
 import System.Environment
 import System.FilePath
+import Control.Concurrent
 
 main :: IO ()
 main = do
   [s, d] <- getArgs
   result <- find s d
   print result
-
-
 
 find :: String -> FilePath -> IO (Maybe FilePath)
 find s d = do
@@ -43,3 +43,23 @@ subfind s p inner asyncs = do
   if not isdir
     then inner asyncs
     else withAsync (find s p) $ \a -> inner (a:asyncs)
+
+
+newtype NBSem = NBSem (MVar Int)
+
+newNBSem :: Int -> IO NBSem
+newNBSem i = do
+  m <- newMVar i
+  return (NBSem m)
+
+tryAcquireNBSem :: NBSem -> IO Bool
+tryAcquireNBSem (NBSem m) =
+  modifyMVar m $ \i ->
+  if i == 0
+  then return (i, False)
+  else let !z = i - 1 in return (z, True)
+
+releaseNBSem :: NBSem -> IO ()
+releaseNBSem (NBSem m) =
+  modifyMVar m $ \i ->
+  let !z = i+1 in return (z, ())
