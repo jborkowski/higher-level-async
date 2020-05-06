@@ -1,76 +1,51 @@
 {-# LANGUAGE BangPatterns #-}
-{-# LANGUAGE LambdaCase #-}
+{-# LANGUAGE LambdaCase   #-}
 module FindPar where
 
-import AsyncAPI
-import Data.List          (sort)
-import System.Directory
-import System.Environment
-import System.FilePath
-import Control.Concurrent
-import qualified Control.Exception as E
-import Data.IORef
+import           Control.Concurrent
+import qualified Control.Exception       as E
+import           Control.Monad.IO.Class
+import           Control.Monad.Par.Class
+import           Control.Monad.Par.IO
+import           Data.IORef
+import           Data.List               (sort)
+import           System.Directory
+import           System.Environment
+import           System.FilePath
+import GHC.Conc (getNumCapabilities)
+
 
 main :: IO ()
 main = do
   [s, d] <- getArgs
-  n <- getNumCapabilities
-  sem <- newNBSem (if n == 1 then 0 else n * 4)
-  find sem s d >>= print
+  runParIO (find s d) >>= print
 
-find :: NBSem -> String -> FilePath -> IO (Maybe FilePath)
-find stm s d = do
-  fs <- getDirectoryContents d
+find :: String -> FilePath -> ParIO (Maybe FilePath)
+find s d = do
+  fs <- liftIO $ getDirectoryContents d
   let fs' = sort $ filter (`notElem` [".", ".."]) fs
   if any (== s) fs'
     then return (Just (d </> s))
     else do
     let ps = map (d </>) fs'
-    foldr (subfind stm s) dowait ps []
+    foldr (subfind s) dowait ps []
   where
     dowait as = loop (reverse as)
 
     loop [] = return Nothing
     loop (a:as) = do
-      r <- wait a
+      r <- get a
       case r of
         Nothing -> loop as
         Just a  -> return (Just a)
 
-subfind :: NBSem -> String -> FilePath
-        -> ([Async (Maybe FilePath)] -> IO (Maybe FilePath))
-        -> [Async (Maybe FilePath)] -> IO (Maybe FilePath)
-subfind sem s p inner asyncs = do
-  isdir <- doesDirectoryExist p
+subfind :: String -> FilePath
+        -> ([IVar (Maybe FilePath)] -> ParIO (Maybe FilePath))
+        -> [IVar (Maybe FilePath)] -> ParIO (Maybe FilePath)
+subfind s p inner ivars = do
+  isdir <- liftIO $ doesDirectoryExist p
   if not isdir
-    then inner asyncs
-    else do
-    q <- tryAcquireNBSem sem
-    if q
-      then do
-      let dofind = E.finally (find sem s p) (releaseNBSem sem)
-      withAsync dofind $ \a -> inner (a:asyncs)
-      else do
-      r <- find sem s p
-      case r of
-        Nothing -> inner asyncs
-        Just _  -> return r
-
-newtype NBSem = NBSem (IORef Int)
-
-newNBSem :: Int -> IO NBSem
-newNBSem i = do
-  m <- newIORef i
-  return (NBSem m)
-
-tryAcquireNBSem :: NBSem -> IO Bool
-tryAcquireNBSem (NBSem m) =
-  atomicModifyIORef m $ \i ->
-    if i == 0
-      then (i, False)
-      else let !z = i-1 in (z, True)
-
-releaseNBSem :: NBSem -> IO ()
-releaseNBSem (NBSem m) =
-  atomicModifyIORef m $ \i ->
-  let !z = i+1 in (z, ())
+    then inner ivars
+    else do v <- new
+            fork (find s p >>= put v)
+            inner (v : ivars)

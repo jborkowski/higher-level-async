@@ -29,7 +29,8 @@ dependencies:
 - network
 - directory
 - filepath
-
+- monad-par
+- abstract-par
 library:
   source-dirs: src
 
