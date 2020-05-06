@@ -9,11 +9,13 @@ import System.Environment
 import System.FilePath
 import Control.Concurrent
 import qualified Control.Exception as E
+import Data.IORef
 
 main :: IO ()
 main = do
-  [n, s, d] <- getArgs
-  sem <- newNBSem (read n)
+  [s, d] <- getArgs
+  n <- getNumCapabilities
+  sem <- newNBSem (if n == 1 then 0 else n * 4)
   find sem s d >>= print
 
 find :: NBSem -> String -> FilePath -> IO (Maybe FilePath)
@@ -54,21 +56,21 @@ subfind sem s p inner asyncs = do
         Nothing -> inner asyncs
         Just _  -> return r
 
-newtype NBSem = NBSem (MVar Int)
+newtype NBSem = NBSem (IORef Int)
 
 newNBSem :: Int -> IO NBSem
 newNBSem i = do
-  m <- newMVar i
+  m <- newIORef i
   return (NBSem m)
 
 tryAcquireNBSem :: NBSem -> IO Bool
 tryAcquireNBSem (NBSem m) =
-  modifyMVar m $ \i ->
-  if i == 0
-  then return (i, False)
-  else let !z = i - 1 in return (z, True)
+  atomicModifyIORef m $ \i ->
+    if i == 0
+      then (i, False)
+      else let !z = i-1 in (z, True)
 
 releaseNBSem :: NBSem -> IO ()
 releaseNBSem (NBSem m) =
-  modifyMVar m $ \i ->
-  let !z = i+1 in return (z, ())
+  atomicModifyIORef m $ \i ->
+  let !z = i+1 in (z, ())
