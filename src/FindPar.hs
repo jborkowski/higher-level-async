@@ -8,22 +8,23 @@ import System.Directory
 import System.Environment
 import System.FilePath
 import Control.Concurrent
+import qualified Control.Exception as E
 
 main :: IO ()
 main = do
-  [s, d] <- getArgs
-  result <- find s d
-  print result
+  [n, s, d] <- getArgs
+  sem <- newNBSem (read n)
+  find sem s d >>= print
 
-find :: String -> FilePath -> IO (Maybe FilePath)
-find s d = do
+find :: NBSem -> String -> FilePath -> IO (Maybe FilePath)
+find stm s d = do
   fs <- getDirectoryContents d
   let fs' = sort $ filter (`notElem` [".", ".."]) fs
   if any (== s) fs'
     then return (Just (d </> s))
     else do
     let ps = map (d </>) fs'
-    foldr (subfind s) dowait ps []
+    foldr (subfind stm s) dowait ps []
   where
     dowait as = loop (reverse as)
 
@@ -34,16 +35,24 @@ find s d = do
         Nothing -> loop as
         Just a  -> return (Just a)
 
-subfind :: String
-        -> FilePath
+subfind :: NBSem -> String -> FilePath
         -> ([Async (Maybe FilePath)] -> IO (Maybe FilePath))
         -> [Async (Maybe FilePath)] -> IO (Maybe FilePath)
-subfind s p inner asyncs = do
+subfind sem s p inner asyncs = do
   isdir <- doesDirectoryExist p
   if not isdir
     then inner asyncs
-    else withAsync (find s p) $ \a -> inner (a:asyncs)
-
+    else do
+    q <- tryAcquireNBSem sem
+    if q
+      then do
+      let dofind = E.finally (find sem s p) (releaseNBSem sem)
+      withAsync dofind $ \a -> inner (a:asyncs)
+      else do
+      r <- find sem s p
+      case r of
+        Nothing -> inner asyncs
+        Just _  -> return r
 
 newtype NBSem = NBSem (MVar Int)
 
